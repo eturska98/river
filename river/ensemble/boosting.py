@@ -4,7 +4,7 @@ import typing
 
 from river import base, drift, linear_model, utils
 
-__all__ = ["AdaBoostClassifier", "ADWINBoostingClassifier", "BOLEClassifier", "ADWINBoostingClassifier"]
+__all__ = ["AdaBoostClassifier", "ADWINBoostingClassifier", "BOLEClassifier", "ADAC2BoostingClassifier"]
 
 
 class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
