@@ -4,16 +4,14 @@ import typing
 
 from river import base, drift, linear_model, utils
 
-__all__ = ["AdaBoostClassifier", "ADWINBoostingClassifier", "BOLEClassifier"]
+__all__ = ["AdaBoostClassifier", "ADWINBoostingClassifier", "BOLEClassifier", "ADWINBoostingClassifier"]
 
 
 class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
     """Boosting for classification.
-
     For each incoming observation, each model's `learn_one` method is called `k` times where
     `k` is sampled from a Poisson distribution of parameter lambda. The lambda parameter is
     updated when the weaks learners fit successively the same observation.
-
     Parameters
     ----------
     model
@@ -22,30 +20,23 @@ class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
         The number of models in the ensemble.
     seed
         Random number generator seed for reproducibility.
-
     Attributes
     ----------
     wrong_weight : collections.defaultdict
         Number of times a model has made a mistake when making predictions.
     correct_weight : collections.defaultdict
         Number of times a model has predicted the right label when making predictions.
-
     Examples
     --------
-
     In the following example three tree classifiers are boosted together. The performance is
     slightly better than when using a single tree.
-
     >>> from river import datasets
     >>> from river import ensemble
     >>> from river import evaluate
     >>> from river import metrics
     >>> from river import tree
-
     >>> dataset = datasets.Phishing()
-
     >>> metric = metrics.LogLoss()
-
     >>> model = ensemble.AdaBoostClassifier(
     ...     model=(
     ...         tree.HoeffdingTreeClassifier(
@@ -57,17 +48,13 @@ class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
     ...     n_models=5,
     ...     seed=42
     ... )
-
     >>> evaluate.progressive_val_score(dataset, model, metric)
     LogLoss: 0.370805
-
     >>> print(model)
     AdaBoostClassifier(HoeffdingTreeClassifier)
-
     References
     ----------
     [^1]: [Oza, N.C., 2005, October. Online bagging and boosting. In 2005 IEEE international conference on systems, man and cybernetics (Vol. 3, pp. 2340-2345). Ieee.](https://ti.arc.nasa.gov/m/profile/oza/files/ozru01a.pdf)
-
     """
 
     def __init__(self, model: base.Classifier, n_models=10, seed: int = None):
@@ -120,12 +107,10 @@ class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
 
 class ADWINBoostingClassifier(AdaBoostClassifier):
     """ADWIN Boosting classifier.
-
     ADWIN Boosting [^1] is the online boosting method of Oza and Russell [^2]
     with the addition of the `ADWIN` algorithm as a change detector. If concept
     drift is detected, the worst member of the ensemble (based on the error
     estimation by ADWIN) is replaced by a new (empty) classifier.
-
     Parameters
     ----------
     model
@@ -134,17 +119,14 @@ class ADWINBoostingClassifier(AdaBoostClassifier):
         The number of models in the ensemble.
     seed
         Random number generator seed for reproducibility.
-
     Examples
     --------
-
     >>> from river import datasets
     >>> from river import ensemble
     >>> from river import evaluate
     >>> from river import linear_model
     >>> from river import metrics
     >>> from river import preprocessing
-
     >>> dataset = datasets.Phishing()
     >>> model = ensemble.ADWINBoostingClassifier(
     ...     model=(
@@ -155,10 +137,8 @@ class ADWINBoostingClassifier(AdaBoostClassifier):
     ...     seed=42
     ... )
     >>> metric = metrics.F1()
-
     >>> evaluate.progressive_val_score(dataset, model, metric)
     F1: 87.41%
-
     References
     ----------
     [^1]: Albert Bifet, Geoff Holmes, Bernhard Pfahringer, Richard Kirkby,
@@ -168,7 +148,6 @@ class ADWINBoostingClassifier(AdaBoostClassifier):
     [^2]: Oza, N., Russell, S. "Online bagging and boosting."
     In: Artificial Intelligence and Statistics 2001, pp. 105–112.
     Morgan Kaufmann, 2001.
-
     """
 
     def __init__(self, model: base.Classifier, n_models=10, seed: int = None):
@@ -215,7 +194,6 @@ class ADWINBoostingClassifier(AdaBoostClassifier):
 
 class BOLEClassifier(AdaBoostClassifier):
     """Boosting Online Learning Ensemble (BOLE).
-
     A modified version of Oza Online Boosting Algorithm [^1]. For each incoming observation, each
     model's `learn_one` method is called `k` times where `k` is sampled from a Poisson distribution
     of parameter lambda. The first model to be trained will be the one with worst
@@ -223,7 +201,6 @@ class BOLEClassifier(AdaBoostClassifier):
     receive lambda values for training from the models that incorrectly classified an instance, and
     the best model's not yet trained will receive lambda values for training from the models that
     correctly classified an instance. For more details, see [^2].
-
     Parameters
     ----------
     model
@@ -234,7 +211,6 @@ class BOLEClassifier(AdaBoostClassifier):
         Random number generator seed for reproducibility.
     error_bound
         Error bound percentage for allowing models to vote.
-
     Attributes
     ----------
     wrong_weight : collections.defaultdict
@@ -245,19 +221,15 @@ class BOLEClassifier(AdaBoostClassifier):
         Array with the index of the models with best (correct_weight / correct_weight + wrong_weight) in descending order.
     instances_seen : int
         Number of instances that the ensemble trained with.
-
     Examples
     --------
-
     >>> from river import datasets
     >>> from river import ensemble
     >>> from river import evaluate
     >>> from river import drift
     >>> from river import metrics
     >>> from river import tree
-
     >>> dataset = datasets.Elec2().take(3000)
-
     >>> model = ensemble.BOLEClassifier(
     ...     model=drift.DriftRetrainingClassifier(
     ...         model=tree.HoeffdingTreeClassifier(),
@@ -266,17 +238,13 @@ class BOLEClassifier(AdaBoostClassifier):
     ...     n_models=10,
     ...     seed=42
     ... )
-
     >>> metric = metrics.Accuracy()
-
     >>> evaluate.progressive_val_score(dataset, model, metric)
     Accuracy: 93.63%
-
     References
     ----------
     [^1]: [Oza, N.C., 2005, October. Online bagging and boosting. In 2005 IEEE international conference on systems, man and cybernetics (Vol. 3, pp. 2340-2345). Ieee.](https://ti.arc.nasa.gov/m/profile/oza/files/ozru01a.pdf)
     [^2]: R. S. M. d. Barros, S. Garrido T. de Carvalho Santos and P. M. Gonçalves Júnior, "A Boosting-like Online Learning Ensemble," 2016 International Joint Conference on Neural Networks (IJCNN), 2016, pp. 1871-1878, doi: 10.1109/IJCNN.2016.7727427.
-
     """
 
     def __init__(self, model: base.Classifier, n_models=10, seed: int = None, error_bound=0.5):
@@ -367,3 +335,160 @@ class BOLEClassifier(AdaBoostClassifier):
             return y_proba_all
         utils.norm.normalize_values_in_dict(y_proba, inplace=True)
         return y_proba
+    
+
+class ADAC2BoostingClassifier(ADWINBoostingClassifier):
+    """ Online AdaC2 ensemble classifier.
+    Online AdaC2 [1]_ is an adaptation of the ensemble learner designed for data streams. 
+    It is a boosting algorithm that considers the costs of misclassification when calculating 
+    the classifier weights and updating sample weights. Specifically, it assigns higher weights 
+    to misclassified positive samples compared to misclassified negative samples, where :math:'C_P' 
+    and :math:'C_N' represent positive and negative costs. The addition of an ADWIN change detector 
+    further improves this online ensemble learner method. ADWIN, which stands for Adaptive 
+    Windowing, maintains updated statistics of a variable-sized window and can detect changes 
+    and perform cuts in its window to better adapt the learning algorithms.
+    Parameters
+    ----------
+    model: (base.Classifier)
+        The classifier to boost.
+    n_models: – defaults to 10
+        The number of models in the ensemble.
+    seed: (int) – defaults to None
+        Random number generator seed for reproducibility.
+    cost_positive: (default=1.0)
+        The cost of misclassifying a positive sample.
+    cost_negative: (default=0.1)
+        The cost of misclassifying a negative sample.
+    Attributes
+    ----------
+    lam_tp : collections.defaultdict
+        Parameter :math:'lambda' to track the sum of weighted Poisson distribution in the category true positive. 
+    lam_tn : collections.defaultdict
+        Parameter :math:'lambda' to track the sum of weighted Poisson distribution in the category true negative.
+    lam_fp : collections.defaultdict
+        Parameter :math:'lambda' to track the sum of weighted Poisson distribution in the category false positive.
+    lam_fn : collections.defaultdict
+        Parameter :math:'lambda' to track the sum of weighted Poisson distribution in the category false negative.
+    lam_sum : collections.defaultdict
+        The unweighted sum of total Poisson distribution parameter for the mth base learner.
+    werr : collections.defaultdict
+        Weighted error, calculated by :math:'(lambda_{FP} + lambda_{FN}) / lambda_{SUM}'.
+    wacc : collections.defaultdict
+        Weighted accuracy, calculated by :math:'(lambda_{TP} + lambda_{TN})/ lambda_{SUM}'.
+    
+    Examples
+    --------
+    >>> from river import datasets
+    >>> from river import ensemble
+    >>> from river import evaluate
+    >>> from river import metrics
+    >>> from river import tree
+    >>> from river import linear_model
+    >>> from river import preprocessing
+    >>> from river.datasets import synth
+    >>> dataset = synth.SEA(seed=1)
+    >>> metric = metrics.Accuracy()
+    >>> model = ensemble.ADAC2BoostingClassifier(
+    ...     model=(
+    ...         tree.HoeffdingTreeClassifier(
+    ...             split_criterion='gini',
+    ...             delta=1e-5,
+    ...             grace_period=2000
+    ...         )
+    ...     ),
+    ...     n_models=10,
+    ...     seed=42
+    ... )
+    >>> evaluate.progressive_val_score(dataset.take(1000), model, metric)
+    Accuracy: 91.69%
+    >>> print(model)
+    ADAC2BoostingClassifier(HoeffdingTreeClassifier)
+
+    References
+    ----------
+    .. [1] B. Wang and J. Pineau, "Online Bagging and Boosting for Imbalanced Data Streams,"
+       in IEEE Transactions on Knowledge and Data Engineering, vol. 28, no. 12, pp.
+       3353-3366, 1 Dec. 2016. doi: 10.1109/TKDE.2016.2609424
+    """
+
+    def __init__(self, model: base.Classifier, n_models=10, seed: int = None,  cost_positive=1,
+                 cost_negative=0.1):
+        super().__init__(model, n_models, seed)
+        self._drift_detectors = [drift.ADWIN() for _ in range(self.n_models)]
+        self.lam_tp: typing.DefaultDict = collections.defaultdict(int)
+        self.lam_tn: typing.DefaultDict = collections.defaultdict(int)
+        self.lam_fp: typing.DefaultDict = collections.defaultdict(int)
+        self.lam_fn: typing.DefaultDict = collections.defaultdict(int)
+        self.lam_sum: typing.DefaultDict = collections.defaultdict(int)
+        self.wacc: typing.DefaultDict = collections.defaultdict(int)
+        self.werr: typing.DefaultDict = collections.defaultdict(int)
+        self.cost_positive=cost_positive
+        self.cost_negative= cost_negative
+        
+    def learn_one(self, x, y, **kwargs):
+        
+        change_detected = False
+        lambda_poisson = 1.0
+        for i, model in enumerate(self):
+            self.lam_sum[i] += lambda_poisson
+            for _ in range(utils.random.poisson(1, self._rng)):
+                model.learn_one(x, y, **kwargs)
+
+            if model.predict_one(x) == 1 and y==1:
+                self.lam_tp[i] += self.cost_positive * lambda_poisson
+                self.wacc[i] = (self.lam_tp[i] + self.lam_tn[i]) / self.lam_sum[i]
+                self.werr[i] = (self.lam_fp[i] + self.lam_fn[i]) / self.lam_sum[i]
+                lambda_poisson = (self.cost_positive * lambda_poisson) / (2 * self.wacc[i])
+            elif model.predict_one(x) == 0 and y==0:
+                self.lam_tn[i] += self.cost_negative * lambda_poisson
+                self.wacc[i] = (self.lam_tp[i] + self.lam_tn[i]) / self.lam_sum[i]
+                self.werr[i] = (self.lam_fp[i] + self.lam_fn[i]) / self.lam_sum[i]
+                lambda_poisson = (self.cost_negative * lambda_poisson) / (2 * self.wacc[i])
+            elif model.predict_one(x) == 0 and y==1:
+                self.lam_fn[i] += self.cost_positive * lambda_poisson
+                self.wacc[i] = (self.lam_tp[i] + self.lam_tn[i]) / self.lam_sum[i]
+                self.werr[i] = (self.lam_fp[i] + self.lam_fn[i]) / self.lam_sum[i]
+                lambda_poisson = (self.cost_positive * lambda_poisson) / (2 * self.werr[i])
+            elif model.predict_one(x) == 1 and y==0:
+                self.lam_fp[i] += self.cost_negative * lambda_poisson
+                self.wacc[i] = (self.lam_tp[i] + self.lam_tn[i]) / self.lam_sum[i]
+                self.werr[i] = (self.lam_fp[i] + self.lam_fn[i]) / self.lam_sum[i]
+                lambda_poisson = (self.cost_negative * lambda_poisson) / (2 * self.werr[i])
+
+            y_pred = model.predict_one(x)
+            error_estimation = self._drift_detectors[i].estimation
+            self._drift_detectors[i].update(int(y_pred == y))
+            if self._drift_detectors[i].drift_detected:
+                if self._drift_detectors[i].estimation > error_estimation:
+                    change_detected = True
+
+        if change_detected:
+            max_error_idx = max(
+                range(len(self._drift_detectors)),
+                key=lambda j: self._drift_detectors[j].estimation,
+            )
+            self.models[max_error_idx] = self.model.clone()
+            self._drift_detectors[max_error_idx] = drift.ADWIN()
+            self.correct_weight[max_error_idx] = 0
+            self.wrong_weight[max_error_idx] = 0
+        return self
+        
+    def predict_proba_one(self, x, **kwargs):
+        y_proba = collections.Counter()
+
+        for i, model in enumerate(self):
+            beta_inv = self.wacc[i] + 1e-16
+            beta_inv /= self.werr[i]+ 1e-16
+            if beta_inv < 1:
+                model_weight = 1.0
+            else:
+                model_weight = math.log(beta_inv) if beta_inv != 0 else 0
+                
+            predictions = model.predict_proba_one(x, **kwargs)
+            utils.norm.scale_values_in_dict(predictions, model_weight, inplace=True)
+            y_proba.update(predictions)
+
+        utils.norm.normalize_values_in_dict(y_proba, inplace=True)
+        return y_proba
+    
+    
