@@ -9,9 +9,11 @@ __all__ = ["AdaBoostClassifier", "ADWINBoostingClassifier", "BOLEClassifier", "A
 
 class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
     """Boosting for classification.
+
     For each incoming observation, each model's `learn_one` method is called `k` times where
     `k` is sampled from a Poisson distribution of parameter lambda. The lambda parameter is
     updated when the weaks learners fit successively the same observation.
+
     Parameters
     ----------
     model
@@ -20,23 +22,30 @@ class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
         The number of models in the ensemble.
     seed
         Random number generator seed for reproducibility.
+
     Attributes
     ----------
     wrong_weight : collections.defaultdict
         Number of times a model has made a mistake when making predictions.
     correct_weight : collections.defaultdict
         Number of times a model has predicted the right label when making predictions.
+
     Examples
     --------
+
     In the following example three tree classifiers are boosted together. The performance is
     slightly better than when using a single tree.
+
     >>> from river import datasets
     >>> from river import ensemble
     >>> from river import evaluate
     >>> from river import metrics
     >>> from river import tree
+
     >>> dataset = datasets.Phishing()
+
     >>> metric = metrics.LogLoss()
+
     >>> model = ensemble.AdaBoostClassifier(
     ...     model=(
     ...         tree.HoeffdingTreeClassifier(
@@ -48,13 +57,17 @@ class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
     ...     n_models=5,
     ...     seed=42
     ... )
+
     >>> evaluate.progressive_val_score(dataset, model, metric)
     LogLoss: 0.370805
+
     >>> print(model)
     AdaBoostClassifier(HoeffdingTreeClassifier)
+
     References
     ----------
     [^1]: [Oza, N.C., 2005, October. Online bagging and boosting. In 2005 IEEE international conference on systems, man and cybernetics (Vol. 3, pp. 2340-2345). Ieee.](https://ti.arc.nasa.gov/m/profile/oza/files/ozru01a.pdf)
+
     """
 
     def __init__(self, model: base.Classifier, n_models=10, seed: int = None):
@@ -107,10 +120,12 @@ class AdaBoostClassifier(base.WrapperEnsemble, base.Classifier):
 
 class ADWINBoostingClassifier(AdaBoostClassifier):
     """ADWIN Boosting classifier.
+
     ADWIN Boosting [^1] is the online boosting method of Oza and Russell [^2]
     with the addition of the `ADWIN` algorithm as a change detector. If concept
     drift is detected, the worst member of the ensemble (based on the error
     estimation by ADWIN) is replaced by a new (empty) classifier.
+
     Parameters
     ----------
     model
@@ -119,14 +134,17 @@ class ADWINBoostingClassifier(AdaBoostClassifier):
         The number of models in the ensemble.
     seed
         Random number generator seed for reproducibility.
+
     Examples
     --------
+
     >>> from river import datasets
     >>> from river import ensemble
     >>> from river import evaluate
     >>> from river import linear_model
     >>> from river import metrics
     >>> from river import preprocessing
+
     >>> dataset = datasets.Phishing()
     >>> model = ensemble.ADWINBoostingClassifier(
     ...     model=(
@@ -137,8 +155,10 @@ class ADWINBoostingClassifier(AdaBoostClassifier):
     ...     seed=42
     ... )
     >>> metric = metrics.F1()
+
     >>> evaluate.progressive_val_score(dataset, model, metric)
     F1: 87.41%
+
     References
     ----------
     [^1]: Albert Bifet, Geoff Holmes, Bernhard Pfahringer, Richard Kirkby,
@@ -148,6 +168,7 @@ class ADWINBoostingClassifier(AdaBoostClassifier):
     [^2]: Oza, N., Russell, S. "Online bagging and boosting."
     In: Artificial Intelligence and Statistics 2001, pp. 105–112.
     Morgan Kaufmann, 2001.
+
     """
 
     def __init__(self, model: base.Classifier, n_models=10, seed: int = None):
@@ -194,6 +215,7 @@ class ADWINBoostingClassifier(AdaBoostClassifier):
 
 class BOLEClassifier(AdaBoostClassifier):
     """Boosting Online Learning Ensemble (BOLE).
+
     A modified version of Oza Online Boosting Algorithm [^1]. For each incoming observation, each
     model's `learn_one` method is called `k` times where `k` is sampled from a Poisson distribution
     of parameter lambda. The first model to be trained will be the one with worst
@@ -201,6 +223,7 @@ class BOLEClassifier(AdaBoostClassifier):
     receive lambda values for training from the models that incorrectly classified an instance, and
     the best model's not yet trained will receive lambda values for training from the models that
     correctly classified an instance. For more details, see [^2].
+
     Parameters
     ----------
     model
@@ -211,6 +234,7 @@ class BOLEClassifier(AdaBoostClassifier):
         Random number generator seed for reproducibility.
     error_bound
         Error bound percentage for allowing models to vote.
+
     Attributes
     ----------
     wrong_weight : collections.defaultdict
@@ -221,15 +245,19 @@ class BOLEClassifier(AdaBoostClassifier):
         Array with the index of the models with best (correct_weight / correct_weight + wrong_weight) in descending order.
     instances_seen : int
         Number of instances that the ensemble trained with.
+
     Examples
     --------
+
     >>> from river import datasets
     >>> from river import ensemble
     >>> from river import evaluate
     >>> from river import drift
     >>> from river import metrics
     >>> from river import tree
+
     >>> dataset = datasets.Elec2().take(3000)
+
     >>> model = ensemble.BOLEClassifier(
     ...     model=drift.DriftRetrainingClassifier(
     ...         model=tree.HoeffdingTreeClassifier(),
@@ -238,13 +266,17 @@ class BOLEClassifier(AdaBoostClassifier):
     ...     n_models=10,
     ...     seed=42
     ... )
+
     >>> metric = metrics.Accuracy()
+
     >>> evaluate.progressive_val_score(dataset, model, metric)
     Accuracy: 93.63%
+
     References
     ----------
     [^1]: [Oza, N.C., 2005, October. Online bagging and boosting. In 2005 IEEE international conference on systems, man and cybernetics (Vol. 3, pp. 2340-2345). Ieee.](https://ti.arc.nasa.gov/m/profile/oza/files/ozru01a.pdf)
     [^2]: R. S. M. d. Barros, S. Garrido T. de Carvalho Santos and P. M. Gonçalves Júnior, "A Boosting-like Online Learning Ensemble," 2016 International Joint Conference on Neural Networks (IJCNN), 2016, pp. 1871-1878, doi: 10.1109/IJCNN.2016.7727427.
+
     """
 
     def __init__(self, model: base.Classifier, n_models=10, seed: int = None, error_bound=0.5):
@@ -335,8 +367,8 @@ class BOLEClassifier(AdaBoostClassifier):
             return y_proba_all
         utils.norm.normalize_values_in_dict(y_proba, inplace=True)
         return y_proba
+  
     
-
 class ADAC2BoostingClassifier(ADWINBoostingClassifier):
     """ Online AdaC2 ensemble classifier.
     Online AdaC2 [1]_ is an adaptation of the ensemble learner designed for data streams. 
